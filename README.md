@@ -414,3 +414,141 @@ public class PagingVO implements Serializable {
 
 }
 ```
+
+### src/main/resources/mybatis/mapper/board.xml
+```java
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<!-- 3 : 네임스페이스는 Dao 주소  -->
+<mapper namespace="com.study.board.dao.IBoardDao">
+
+<!-- 54 -->
+<select id="getBoardCount" resultType="int" parameterType="com.study.board.vo.SearchVO">
+	select count(*)
+	from free_board
+	where bo_del_yn = 'N'
+	<if test="searchWord != null"> <!-- 검색어에 따라 리스트 나오게 설정 -->
+		<choose>
+			<when test='searchType=="T"'>
+				and bo_title like '%' || #{searchWord} || '%'
+			</when>
+			<when test='searchType=="W"'>
+				and bo_writer like '%' || #{searchWord} || '%'
+			</when>
+			<when test='searchType=="C"'>
+				and bo_content like '%' || #{searchWord} || '%'
+			</when>
+		</choose>
+	</if>
+</select>
+
+
+
+
+<!-- 4 : sql에서 테이블을 셀렉트로 끌고와서 넣어주기  -->
+<select id="getBoardList" resultType="com.study.board.vo.BoardVO" parameterType="com.study.board.vo.SearchVO"><!-- 52 : SearchVO 추가 -->
+
+<!-- 페이징 하기 위해 쿼리 수정 -->
+	select *
+from
+(select a.*, rownum as rnum 
+from(
+SELECT bo_no
+       , bo_title
+       , bo_category
+       , bo_writer
+       , bo_pass
+       , bo_content
+       , bo_ip
+       , bo_hit
+       , bo_reg_date
+       , bo_mod_date
+       , bo_del_yn
+	FROM free_board
+	where bo_del_yn = 'N'
+	<if test="searchWord != null"> <!-- 검색어에 따라 리스트 나오게 설정 -->
+		<choose>
+			<when test='searchType=="T"'>
+				and bo_title like '%' || #{searchWord} || '%'
+			</when>
+			<when test='searchType=="W"'>
+				and bo_writer like '%' || #{searchWord} || '%'
+			</when>
+			<when test='searchType=="C"'>
+				and bo_content like '%' || #{searchWord} || '%'
+			</when>
+		</choose>
+	</if>
+	order by bo_no desc) a)b
+    where rnum between #{firstRow} and #{lastRow} 	
+
+</select>
+
+<!-- 17 : Dao에서 넣어놨던 파라미터 값을 무조건 parameterType에 써주기   -->
+<select id="getBoard" resultType="com.study.board.vo.BoardVO" parameterType="int">
+
+	SELECT bo_no
+       , bo_title
+       , bo_category
+       , bo_writer
+       , bo_pass
+       , bo_content
+       , bo_ip
+       , bo_hit
+       , bo_reg_date
+       , bo_mod_date
+       , bo_del_yn
+	FROM free_board
+	where bo_no = #{boNo}<!-- #{boNo} 이건 파라미터값 -->
+
+</select>
+
+<!-- 26 업데이트 : Dao에서 넣어놨던 파라미터 값을 무조건 parameterType에 써주기  -->
+<update id="updateBoard" parameterType="com.study.board.vo.BoardVO">
+	update free_board set
+	bo_title = #{boTitle}, <!-- boardEdit.jsp에서 name으로 지정해준 값을 사용할 수 있다. -->
+	bo_writer = #{boWriter}, 
+	bo_content = #{boContent}
+	where bo_no = #{boNo} 
+</update>
+
+<!-- 33 delete xml -->
+<update id="deleteBoard" parameterType="com.study.board.vo.BoardVO">
+	update free_board set
+	bo_del_yn = 'Y'
+	where bo_no = #{boNo}
+</update>
+
+<!-- 40  -->
+<insert id="insertBoard" parameterType="com.study.board.vo.BoardVO" >
+		INSERT INTO free_board (
+	    bo_no
+	    , bo_title
+	    , bo_category
+	    , bo_writer
+	    , bo_pass
+	    , bo_content
+	    , bo_ip
+	    , bo_hit
+	    , bo_reg_date
+	    , bo_mod_date
+	    , bo_del_yn
+	) VALUES (
+	
+	(select max(bo_no) + 1 from free_board)
+	    , #{boTitle}
+	    , 'BC01'
+	    , #{boWriter}
+	    , '1004'
+	    , #{boContent}
+	    , '0'
+	    , 0
+	    , sysdate
+	    , null
+	    , 'N'
+	)
+
+</insert>
+</mapper>
+```
