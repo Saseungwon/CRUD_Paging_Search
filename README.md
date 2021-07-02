@@ -574,7 +574,7 @@ jdbc.validationQuery=SELECT 1 FROM dual
 file.upload.path=/home/pc42-pc/upload/ygy
 ```
 
-### CRUD_Paging_Search/src/main/resources/spring/context-datasource.xml
+### /src/main/resources/spring/context-datasource.xml
 ```java 
 <?xml version="1.0" encoding="UTF-8"?>
 <beans xmlns="http://www.springframework.org/schema/beans"
